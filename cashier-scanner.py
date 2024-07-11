@@ -110,7 +110,11 @@ async def main():
 
 
     #devices = [evdev.InputDevice('/dev/input/event0')]
-    devices = [evdev.InputDevice(path) for path in evdev.list_devices()]
+    #devices = [evdev.InputDevice(path) for path in evdev.list_devices()]
+    #devices = [evdev.InputDevice(path) for path in evdev.list_devices(input_device_dir="/dev/input/by-path")]
+    devices = []
+    for filename in os.listdir("/dev/input/by-path"):
+        devices.append(evdev.InputDevice("/dev/input/by-path/"+filename))
     print(devices)
     background_tasks = []
 
