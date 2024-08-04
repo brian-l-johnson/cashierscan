@@ -79,8 +79,9 @@ async def handle_scan(device, idx):
                                     connection.commit()
                         else:
                             await q.put((station, data))
-                    except json.JSONDecodeError:
+                    except json.JSONDecodeError as err:
                         print("unable to parse JSON")
+                        print(err)
                     pending_string = ''
                 elif (data.scancode != 42) and (key_lookup != None): 
                     pending_string += key_lookup
@@ -90,13 +91,19 @@ async def order_handler():
         event = await q.get()
         print(event)
         data = event[1]
-        if "orderid" in data:
-            print(f"order number {data['orderid']}")
+        if "txn" in data:
+            print(f"order number {data['txn']}")
             reqobj = {
-                "ordernum": data['orderid'],
+                "ordernum": data['txn'],
                 "ordertime": datetime.datetime.now(datetime.timezone.utc).isoformat()
             }
-            resp = requests.patch(os.environ['API_PATH']+"/cashiers/"+event[0], json=reqobj)
+            try:
+                resp = requests.patch(os.environ['API_PATH']+"/cashiers/"+event[0], json=reqobj)
+            except requests.HTTPError as http_err:
+                print(f"HTTP error: {http_err}")
+            except Exception as err:
+                print(f"some other exception")
+
         q.task_done()
 
 async def main():
